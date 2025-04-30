@@ -4,7 +4,7 @@ from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 
 # Load the Excel file
-df = pd.read_excel('reward_designing/mgx_ensembling.xlsx')
+df = pd.read_excel('mgx_ensembling.xlsx')
 
 # Group by requirement to process each task separately
 grouped = df.groupby('requirement')
