@@ -72,7 +72,7 @@ def plot_rewards_trend(
              'k:', label='Best Human Score', linewidth=2)
     
     plt.xlabel('Sample Size')
-    plt.ylabel('Score')
+    plt.ylabel('Human Score')
     plt.title('Reward Methods Performance Trend')
     plt.grid(True, linestyle='--', alpha=0.7)
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')

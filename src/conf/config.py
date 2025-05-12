@@ -15,4 +15,3 @@ VALID_COLUMNS = [
     'completion_cost', 'interactions_count', 'cost($)',
     'prod_url', 'project_files_count', 'code_files_count', 'code_lines'
 ]
-

@@ -2,18 +2,18 @@
 # @Author  : 
 # @Desc    : 奖励函数分析工具
 
-from typing import Dict, List, Any, Set, Tuple, Optional
+from typing import Dict, List, Any, Tuple
 import numpy as np
 import pandas as pd
 from openpyxl import Workbook
 from loguru import logger
 from openpyxl.styles import PatternFill
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from collections import defaultdict
 
 from openpyxl.worksheet.worksheet import Worksheet
 
-from utils.utils import  save_dataframe_to_excel, load_data, create_valid_sheet_name
+from utils.utils import save_dataframe_to_excel, load_data, create_valid_sheet_name
 from ensemble_processor import EnsembleProcessor
 from utils.visualization_utils import plot_rewards_trend
 from reward_func import RewardCalculator, HumanScoreInfo, RewardMetrics
@@ -23,6 +23,7 @@ from conf.config import OUTPUT_DIR, SAMPLE_SIZES
 REWARD_PREFIX = "reward"
 ENSEMBLE_PREFIX = "ensemble"
 SAMPLE_PREFIX = "sample"
+
 
 @dataclass
 class SampleInfo:
@@ -44,6 +45,7 @@ class SampleInfo:
             **reward_dict,
             **self.ensemble_info
         }
+
 
 class RewardAnalyzer:
     """奖励分析器类，负责分析奖励函数的效果"""
@@ -89,7 +91,7 @@ class RewardAnalyzer:
         sample_key = f'{SAMPLE_PREFIX}_{size}'
         numerical_data = {h: [] for h in self.headers if h not in ["Case_Name", "Human_Scores"]}
         row_data = []
-
+        
         for info in self.info_result_dict:
             if sample_key not in info:
                 continue
@@ -118,7 +120,7 @@ class RewardAnalyzer:
             for header, value in row_values.items():
                 if header in numerical_data:
                     numerical_data[header].append(float(value))
-            
+        
         return row_data, numerical_data
     
     def _create_sample_sheet(self, wb: Workbook, size: int) -> None:
@@ -150,10 +152,10 @@ class RewardAnalyzer:
         ws.append(mean_row)
     
     def _calculate_reward_metrics(
-        self, 
-        sampled_group: pd.DataFrame, 
-        human_info: HumanScoreInfo,
-        method_name: str
+            self,
+            sampled_group: pd.DataFrame,
+            human_info: HumanScoreInfo,
+            method_name: str
     ) -> RewardMetrics:
         """计算单个奖励方法的指标"""
         method = getattr(RewardCalculator, method_name)
@@ -170,10 +172,10 @@ class RewardAnalyzer:
         )
     
     def _update_result_df(
-        self, 
-        df: pd.DataFrame, 
-        reward_num: str, 
-        metrics: RewardMetrics
+            self,
+            df: pd.DataFrame,
+            reward_num: str,
+            metrics: RewardMetrics
     ) -> pd.DataFrame:
         """更新结果DataFrame"""
         prefix = f"{REWARD_PREFIX}{reward_num}"
@@ -183,7 +185,7 @@ class RewardAnalyzer:
         df[f"is_{prefix}_best"] = False
         df.loc[metrics.best_idx, f"is_{prefix}_best"] = True
         return df
-
+    
     def _get_reward_info(self, group: pd.DataFrame, sample_size: int) -> SampleInfo:
         """获取单个样本的奖励分析信息"""
         sampled_group = group.sample(n=sample_size, random_state=49)
@@ -220,7 +222,7 @@ class RewardAnalyzer:
             reward_metrics=reward_metrics,
             ensemble_info=ensemble_info
         )
-
+    
     def analyze_group(self, group: pd.DataFrame) -> Dict[str, Any]:
         """分析单个组的数据"""
         self.total_requirements += 1
@@ -228,7 +230,7 @@ class RewardAnalyzer:
         
         if len(group) < 2:
             return info
-            
+        
         for sample_size in SAMPLE_SIZES:
             if len(group) >= sample_size:
                 sample_info = self._get_reward_info(group, sample_size)
@@ -331,8 +333,6 @@ class RewardAnalyzer:
             'avg': {size: [] for size in SAMPLE_SIZES},
             'best': {size: [] for size in SAMPLE_SIZES}
         }
-
-        
         
         for size in SAMPLE_SIZES:
             sample_key = f'{SAMPLE_PREFIX}_{size}'
@@ -341,17 +341,17 @@ class RewardAnalyzer:
             for info in self.info_result_dict:
                 if sample_key not in info:
                     continue
-                    
+                
                 sample_info = info[sample_key]
                 
                 # 收集reward和ensemble分数
                 
                 for header in self.headers:
-                    if header in ['Case_Name', 'Human_Scores','Avg_Human_Score','Best_Human_Score']:
+                    if header in ['Case_Name', 'Human_Scores', 'Avg_Human_Score', 'Best_Human_Score']:
                         continue
                     mapped_name = header.split("_")[0].lower()
                     reward_scores[header].append(sample_info.get(f"select_score_{mapped_name}", 0))
-
+                
                 # 收集human分数
                 human_scores['avg'][size].append(sample_info['avg_human_score'])
                 human_scores['best'][size].append(sample_info['best_human_score'])
@@ -373,15 +373,15 @@ class RewardAnalyzer:
             best_human_scores={k: np.mean(v) if v else 0 for k, v in human_scores['best'].items()},
             save_path=save_path
         )
-
+    
     def _highlight_row_if_needed(
-        self,
-        ws: Worksheet,
-        row_idx: int,
-        row_data: List[Any],
-        reward4_col_idx: int,
-        avg_human_col_idx: int,
-        highlight_fill: PatternFill
+            self,
+            ws: Worksheet,
+            row_idx: int,
+            row_data: List[Any],
+            reward4_col_idx: int,
+            avg_human_col_idx: int,
+            highlight_fill: PatternFill
     ) -> None:
         """如果需要则高亮整行"""
         try:
@@ -392,7 +392,9 @@ class RewardAnalyzer:
                 for cell in ws[row_idx]:
                     cell.fill = highlight_fill
         except (ValueError, IndexError):
-            logger.warning(f"无法处理行 {row_idx} 的高亮: reward4={row_data[reward4_col_idx - 1]}, avg_human={row_data[avg_human_col_idx - 1]}")
+            logger.warning(
+                f"无法处理行 {row_idx} 的高亮: reward4={row_data[reward4_col_idx - 1]}, avg_human={row_data[avg_human_col_idx - 1]}")
+
 
 def main():
     """主函数"""
@@ -415,12 +417,11 @@ def main():
     for requirement, group in grouped:
         info = analyzer.analyze_group(group)
         analyzer.info_result_dict.append(info)
-
+    
     analyzer.error_wb.save(OUTPUT_DIR / 'best1_errors.xlsx')
     
     # 保存详细结果
     analyzer.save_case_results()
-    
     
     # 分析并可视化reward结果
     analyzer.visualize_rewards_trend()
